@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, WebSocket, WebSocketDisconnect
 from pydantic import BaseModel
-from typing import Dict, Any
+from typing import Dict, Any, List
 from datetime import datetime
 import uuid
 import time
@@ -8,11 +8,13 @@ import time
 from app.models import AgentStatus
 from app.hooks import TracingHooks
 from app.storage.trace_store import TraceStore
+from app.storage.event_store import EventStore
 from app.websocket_manager import ws_manager
 
 router = APIRouter(tags=["agents"])
 
 hooks: TracingHooks = None
+event_store: EventStore = None
 
 
 class AgentExecuteRequest(BaseModel):
@@ -30,9 +32,18 @@ class AgentExecuteResponse(BaseModel):
     message: str
 
 
-def init_router(tracing_hooks: TracingHooks):
-    global hooks
+def init_router(tracing_hooks: TracingHooks, store: EventStore = None):
+    global hooks, event_store
     hooks = tracing_hooks
+    event_store = store
+
+
+@router.get("")
+async def list_agents():
+    if event_store:
+        agents = await event_store.get_all_agents()
+        return {"agents": agents}
+    return {"agents": []}
 
 
 @router.post("/execute", response_model=AgentExecuteResponse)

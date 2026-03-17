@@ -60,7 +60,7 @@ async def startup_event():
         hooks = TracingHooks(trace_store, ws_manager)
 
         init_traces_router(trace_store)
-        init_agents_router(hooks)
+        init_agents_router(hooks, event_store)
         init_events_router(event_store)
 
         app.include_router(api_router, prefix="/api/v1")
