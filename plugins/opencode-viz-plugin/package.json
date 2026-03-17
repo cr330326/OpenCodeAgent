@@ -1,0 +1,14 @@
+{
+  "name": "opencode-viz-plugin",
+  "version": "1.0.0",
+  "description": "OpenCode Agent monitoring plugin for Multi-Agent Visualization Platform",
+  "main": "opencode-viz-plugin",
+  "types": "module",
+  "scripts": {
+    "build": "bun build src/index.ts",
+    "dev": "opencode dev"
+  },
+  "dependencies": {
+    "@opencode-ai/sdk": "^0.0.10"
+  }
+}

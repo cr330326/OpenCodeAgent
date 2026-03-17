@@ -1,0 +1,133 @@
+import React, { useEffect, useState } from 'react';
+import dayjs from 'dayjs';
+import { useEventStore } from '../../stores/eventStore';
+import './Events.css';
+
+const statusColors: Record<string, string> = {
+  command: '#722ed1',
+  file: '#faad14',
+  installation: '#faad14',
+  lsp: '#fa8c16',
+  message: '#1890ff',
+  permission: '#ff4d4f',
+  server: '#52c41a',
+  session: '#faad14',
+  shell: '#13c2c2',
+  tool: '#1890ff',
+  tui: '#722ed1'
+};
+
+const categoryLabels: Record<string, string> = {
+  command: 'Command',
+  file: 'File',
+  installation: 'Installation',
+  lsp: 'LSP'
+  message: 'Message',
+  permission: 'Permission'
+  server: 'Server',
+  session: 'Session',
+  todo: 'Todo',
+  shell: 'Shell',
+  tool: 'Tool'
+  tui: 'TUI'
+};
+
+const EventStream: React.FC = () => {
+  const { events, loading, error, hasMore, fetchEvents } = useEventStore();
+
+  const [isLive, setIsLive] = useState(true);
+  const [filter, setFilter] = useState<React.useState({
+    category: '',
+    eventType: '',
+  });
+    const [selectedEvent, setSelectedEvent] = useState<OpenCodeEvent | null>(null);
+    const [autoRefresh, setAutoRefresh] = useState(true);
+
+  useEffect(() => {
+    fetchEvents();
+  }, [fetchEvents]);
+
+      useEffect(() => {
+        if (!autoRefresh) return;
+        const interval = setInterval(() => {
+          fetchEvents();
+        }, 5000);
+      return () => clearInterval(interval);
+    }, [autoRefresh, fetchEvents]);
+
+    const handleFilter = () => {
+      fetchEvents(filter);
+    };
+
+    const handleClearFilter = () => {
+      setFilter({ category: '', eventType: '' });
+      fetchEvents();
+    };
+
+    if (loading) {
+      return <div className="loading">Loading events...</div>;
+    }
+
+    if (error) {
+      return (
+        <div className="error">
+          Error: {error}
+          <button onClick={handleClearFilter}>Clear</button>
+        </div>
+      </div>
+    }
+
+    if (events.length === 0) {
+      return (
+        <div style={{ padding: 40, color: '#666', textAlign: 'center' }}>
+          No events found. Click the Debugger tab or start testing.
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div className="event-list">
+      {events.map((event) => (
+        <div
+          key={event.event_id}
+          className="event-card"
+          style={{
+            borderLeftColor: statusColors[event.event_category] || '#d9d9d9',
+          onClick={() => handleEventClick(event)}
+        >
+          <div className="event-header">
+            <div className="event-category">
+              <span className="event-type">{event.event_type}</span>
+            </div>
+            <div className="event-meta">
+              <span>Agent: {event.agent_id}</span>
+              <span className="event-time">
+                {dayjs(event.timestamp).format('HH:mm:ss')}
+              </div>
+            {event.input_data && (
+              <details className="event-details">
+                <summary>Input Data</summary>
+                <pre style={{ fontSize: 11, margin: 0, padding: 12, background: '#282c34', color: '#abb2bf', overflowX: 'auto' }}>
+                </pre>
+              </div>
+            {event.output_data && (
+              <details className="event-details">
+                <summary>Output Data</summary>
+                <pre style={{ fontSize: 11, margin: 0, padding: 12, background: '#282c34', color: '#abb2bf', overflowX: 'auto' }}>
+                </pre>
+              </div>
+            {event.output_data && (
+              <details className="event-details">
+                <summary>Output Data</summary>
+                <pre style={{ fontSize: 11, margin: 0, padding: 12, background: '#282c34', color: '#abb2bf', overflowX: 'auto' }}>
+                  </pre>
+                </div>
+              </div>
+            </div>
+          );
+        })
+      })}
+    </div>
+  );
+};
